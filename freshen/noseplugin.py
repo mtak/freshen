@@ -216,6 +216,7 @@ class FreshenNosePlugin(Plugin):
             elif not ec is UndefinedStepImpl and hasattr(test.test, 'last_step'):
                 message = "%s\n\n%s" % (str(ev), self._formatSteps(test, test.test.last_step))
                 return (ec, message, tb)
+        return err
 
     formatError = formatFailure
 

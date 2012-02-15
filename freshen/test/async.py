@@ -3,7 +3,7 @@
 from freshen.test.base import FreshenTestCase
 
 from twisted.trial.unittest import TestCase
-from twisted.internet.defer import inlineCallbacks, Deferred
+from twisted.internet.defer import inlineCallbacks, succeed, maybeDeferred
 
 class TwistedTestCase(FreshenTestCase, TestCase):
     """Support asynchronous feature tests."""
@@ -43,28 +43,17 @@ class TwistedTestCase(FreshenTestCase, TestCase):
             hooks.append(lambda hook=hook_impl: hook_impl.run(self.scenario))
         return self._run_deferred(hooks)
 
-    @inlineCallbacks
     def _run_deferred(self, callbacks):
         """Create a chain of deferred function calls
         and events.
-        
+
         Returns: Deferred"""
-        start_chain = Deferred()
-        deferreds = [start_chain]
 
-        for callback in callbacks:
-            result = callback()
-            if isinstance(result, Deferred):
-                # Collect deferred events
-                deferreds.append(result)
-            elif callable(result):
-                # Collect deferred function calls
-                deferreds[-1].addCallback(result)
-
-        # Trigger the deferred execution chain.
-        start_chain.callback(None)
-
-        # Wait for async events.
-        for deferred in deferreds:
-            yield deferred
-
+        # Ensure the first callback returns a Deferred.
+        # All other callbacks or callbacks of the first deferred.
+        if callbacks:
+            start = maybeDeferred(callbacks[0])
+            for callback in callbacks[:1]:
+                start.addCallback(lambda _: callback())
+            return start
+        return succeed(None)

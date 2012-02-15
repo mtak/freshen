@@ -53,7 +53,7 @@ class TwistedTestCase(FreshenTestCase, TestCase):
         # All other callbacks or callbacks of the first deferred.
         if callbacks:
             start = maybeDeferred(callbacks[0])
-            for callback in callbacks[:1]:
+            for callback in callbacks[1:]:
                 start.addCallback(lambda _: callback())
             return start
         return succeed(None)
